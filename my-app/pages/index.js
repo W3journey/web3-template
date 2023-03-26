@@ -3,10 +3,47 @@ import Image from "next/image";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import ToggleDarkMode from "@/components/ToggleDarkMode";
+import { useWeb3React } from "@web3-react/core";
+import { InjectedConnector } from "@web3-react/injected-connector";
+import { ethers } from "ethers";
+import { useState } from "react";
+import { Button } from "@chakra-ui/react";
+
+const injected = new InjectedConnector();
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  const { activate, active, library: provider } = useWeb3React();
+  const [walletConnected, setWalletConnected] = useState(false);
+
+  const connect = async () => {
+    try {
+      await activate(injected);
+      setWalletConnected(true);
+    } catch (error) {
+      setWalletConnected(false);
+      console.log(error);
+    }
+  };
+
+  const getETHBalance = async () => {
+    const signer = provider.getSigner();
+    const balance = await signer.getBalance();
+    console.log(ethers.utils.formatEther(balance));
+  };
+
+  const connectButton = () => {
+    return (
+      <>
+        {active ? (
+          <Button onClick={() => getETHBalance()}>Connected</Button>
+        ) : (
+          <Button onClick={() => connect()}>Connect</Button>
+        )}
+      </>
+    );
+  };
   return (
     <>
       <Head>
@@ -16,6 +53,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <ToggleDarkMode />
+      {connectButton()}
       <main className={styles.main}>
         <div className={styles.description}>
           <p>
